@@ -2,6 +2,10 @@
 
 *pyscreenrec* is a small and cross-platform python library to record screen.
 
+[![Downloads](https://pepy.tech/badge/pyscreenrec)](https://pepy.tech/project/pyscreenrec)
+
+<br>
+
 ## Installation
 Install on Windows: 
 `pip install pyscreenrec`
@@ -37,7 +41,7 @@ The recording will automatically stop after the given `timeout` (in seconds) arg
 <br>
 
 ## Known limitations
-*pyscreenrec* is not able to:
+*pyscreenrec* is yet not able to:
 - capture the system sound during screen recording
 - capture only a certain part of the screen
 
