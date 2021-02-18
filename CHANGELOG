@@ -4,3 +4,11 @@ Change Log
 0.1 (11/02/21)
 --------------
 - First release
+---------------
+
+0.2 (18/02/21)
+--------------
+- Introduced two new methods: `pause_recording` and `resume_recording` which can be used to pause and resume screen recording respectively.
+- The `timeout` argument of the `start_recording` method is deprecated due to it miscellaneous behavior and clash with ability to pause and resume screen recording.
+- The screen recording output video is now saved and the screenshots are deleted by `stop_recording` method .
+--------------

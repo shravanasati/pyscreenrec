@@ -1,13 +1,15 @@
 from setuptools import find_packages, setup
 
-VERSION = 0.1
+VERSION = 0.2
+with open("README.md") as f:
+    README = f.read()
 
 setup(
     name = "pyscreenrec",
     version = VERSION,
     description = "A small python library to record screen.",
     long_description_content_type = "text/markdown",
-    long_description = "https://github.com/Shravan-1908/pyscreenrec#readme",
+    long_description = README,
     url="https://github.com/Shravan-1908/pyscreenrec",
     author = "Shravan Asati",
     author_email = "dev.shravan@protonmail.com",
@@ -16,8 +18,9 @@ setup(
     license = 'MIT',
     keywords = ["python", "screen recording", "screen", "recording", "screenshots"],
     classifiers = [
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
@@ -25,5 +28,6 @@ setup(
         "Operating System :: Unix",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
+        "Topic :: Software Development :: Libraries"
     ]
     )

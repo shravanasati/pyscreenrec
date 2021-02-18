@@ -1,5 +1,5 @@
 from pyscreeze import screenshot
-from time import sleep, time
+from time import sleep
 import cv2
 import os
 from threading import Thread
@@ -8,6 +8,8 @@ from natsort import natsorted
 class InvalidCodec(Exception):
     pass
 
+class InvalidStartMode(Exception):
+    pass
 
 class ScreenRecorder:
     """
@@ -19,6 +21,7 @@ class ScreenRecorder:
         Constructor.
         """
         self._running = False
+        self._start_mode = "start"
         self.screenshot_folder = os.path.join(os.path.expanduser("~"), "Documents//pyscreenrec_data")
 
         # making the screenshot directory if not exists
@@ -28,80 +31,94 @@ class ScreenRecorder:
         self._clear_data()
 
 
-    def _start_recording(self, video_name:str, timeout):
+    def _start_recording(self, video_name:str):
         """
         (Protected) Starts screen recording.
 
         @params 
         
         video_name --> The name of the screen recording video.
-
-        timeout --> (Optional) The time in seconds after which the recording will automatically stop.
         """
         # checking for video extension
         if not video_name.endswith(".mp4"):
             raise InvalidCodec("The video's extension can only be '.mp4'.")
+
+        self.video_name = video_name
 
         # checking if screen is already being recorded
         if self._running:
             print("Screen recording is already running.")
 
         else:
-            self._running = True
-            i = 1
+            if self._start_mode == "start":
+                self._running = True
+                i = 1
 
-            if timeout != None:
-                # running a thread for checking timeout
-                t1 = Thread(target=self._check_for_timeout, args=(timeout,))
-                t1.start()
+                # starting screenshotting
+                while self._running:
+                    screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
+                    sleep(1)
+                    i += 1
 
-            # starting screenshotting
-            while self._running:
-                screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
-                sleep(1)
-                i += 1
+            elif self._start_mode == "resume":
+                self._running = True
+                i = len(natsorted([img for img in os.listdir(self.screenshot_folder) if img.endswith(".jpg")])) + 1
 
-            # saving the video and clearing all screenshots
-            self._save_video(video_name)
-            self._clear_data()
+                while self._running:
+                    screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
+                    sleep(1)
+                    i += 1
 
-    def start_recording(self, video_name:str="Recording.mp4", timeout=None):
+            else:
+                raise InvalidStartMode("The `self._start_mode` can only be 'start' or 'resume'.")
+
+
+    def start_recording(self, video_name:str="Recording.mp4"):
         """
         Starts screen recording.
 
         @params 
         
         video_name --> The name of the output screen recording.
-
-        timeout --> (Optional) The time in seconds after which the recording will automatically stop.
         """
-        t = Thread(target=self._start_recording, args=(video_name, timeout))
+        t = Thread(target=self._start_recording, args=(video_name,))
         t.start()
 
     def stop_recording(self):
         """
         Stops screen recording.
         """
+        if not self._running:
+            print("No screen recording session is going on.")
+            return None
         self._running = False
 
+        # saving the video and clearing all screenshots
+        self._save_video(self.video_name)
+        self._clear_data()
 
-    def _check_for_timeout(self, timeout):
+
+    def pause_recording(self):
         """
-        A method which checks for timeout and stops screen recording if the timeout is over.
-
-        @params
-
-        timeout --> timeout in seconds after which the recording will stop.
+        Pauses screen recording.
         """
-        # intialising the current time
-        init = time()
+        if not self._running:
+            print("No screen recording session is going on.")
+            return None
 
-        # starting an infinite loop to check if timeout is over
-        while True:
-            if time() - init > timeout:
-                self.stop_recording()
-                break
-            sleep(1)
+        self._running = False
+
+    def resume_recording(self):
+        """
+        Resumes screen recording.
+        """
+        if self._running:
+            print("Screen recording is already running.")
+            return None
+
+        self._start_mode = "resume"
+        self.start_recording(self.video_name)
+
 
     def _save_video(self, video_name:str):
         """
@@ -127,5 +144,6 @@ class ScreenRecorder:
         """
         Deletes all screenshots present in the screenshot folder taken during screen recording.
         """
+        # deleting all screenshots present in the screenshot directory
         for screenshot in os.listdir(self.screenshot_folder):
             os.remove(os.path.join(self.screenshot_folder, screenshot))
