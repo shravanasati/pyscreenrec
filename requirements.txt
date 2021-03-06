@@ -1,0 +1,7 @@
+PyScreeze == 0.1.26
+
+natsort == 7.1.1
+
+opencv_python == 4.4.0.46
+
+setuptools == 47.1.0

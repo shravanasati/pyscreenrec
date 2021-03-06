@@ -58,3 +58,5 @@ View [CHANGELOG](CHANGELOG) for more details.
 
 ## Contribution
 Pull requests are welcome. If you want to make a major change, open an issue first to discuss about the change.
+
+For further details, view [CONTRIBUTING.md](CONTRIBUTING.md).
