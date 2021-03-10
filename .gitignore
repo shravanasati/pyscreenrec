@@ -139,3 +139,4 @@ cython_debug/
 
 # Binary
 *.mp4
+*.jpg

@@ -12,3 +12,10 @@ Change Log
 - The `timeout` argument of the `start_recording` method is deprecated due to it miscellaneous behavior and clash with ability to pause and resume screen recording.
 - The screen recording output video is now saved and the screenshots are deleted by `stop_recording` method .
 --------------
+
+0.3 (10/03/21)
+--------------
+- Manually set FPS for the screen recording, by an extra `fps` argument in `start_recording` method.
+- Introduced a one more exception class named `InvalidFPS`.
+- Minor bug fixes.
+--------------

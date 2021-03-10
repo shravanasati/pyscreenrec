@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = 0.2
+VERSION = 0.3
 with open("README.md") as f:
     README = f.read()
 
@@ -18,7 +18,7 @@ setup(
     license = 'MIT',
     keywords = ["python", "screen recording", "screen", "recording", "screenshots"],
     classifiers = [
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.6",

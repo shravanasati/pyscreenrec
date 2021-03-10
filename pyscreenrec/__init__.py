@@ -11,6 +11,9 @@ class InvalidCodec(Exception):
 class InvalidStartMode(Exception):
     pass
 
+class InvalidFPS(Exception):
+    pass
+
 class ScreenRecorder:
     """
     Base class for screen recording.
@@ -22,7 +25,7 @@ class ScreenRecorder:
         """
         self._running = False
         self._start_mode = "start"
-        self.screenshot_folder = os.path.join(os.path.expanduser("~"), "Documents//pyscreenrec_data")
+        self.screenshot_folder = os.path.join(os.path.expanduser("~"), "Documents", "pyscreenrec_data")
 
         # making the screenshot directory if not exists
         if not os.path.exists(self.screenshot_folder):
@@ -31,18 +34,22 @@ class ScreenRecorder:
         self._clear_data()
 
 
-    def _start_recording(self, video_name:str):
+    def _start_recording(self, video_name:str, fps:int):
         """
         (Protected) Starts screen recording.
 
         @params 
         
         video_name --> The name of the screen recording video.
+
+        fps --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
-        # checking for video extension
+        # checking for video extension and fps
         if not video_name.endswith(".mp4"):
             raise InvalidCodec("The video's extension can only be '.mp4'.")
-
+        if fps > 60:
+            raise InvalidFPS("The FPS for the screen recording can be maximum 60 FPS.")
+        self.fps = fps
         self.video_name = video_name
 
         # checking if screen is already being recorded
@@ -57,7 +64,7 @@ class ScreenRecorder:
                 # starting screenshotting
                 while self._running:
                     screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
-                    sleep(1)
+                    sleep(1/self.fps)
                     i += 1
 
             elif self._start_mode == "resume":
@@ -66,22 +73,24 @@ class ScreenRecorder:
 
                 while self._running:
                     screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
-                    sleep(1)
+                    sleep(1/self.fps)
                     i += 1
 
             else:
                 raise InvalidStartMode("The `self._start_mode` can only be 'start' or 'resume'.")
 
 
-    def start_recording(self, video_name:str="Recording.mp4"):
+    def start_recording(self, video_name:str="Recording.mp4", fps:int=15):
         """
         Starts screen recording.
 
         @params 
         
         video_name --> The name of the output screen recording.
+
+        fps --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
-        t = Thread(target=self._start_recording, args=(video_name,))
+        t = Thread(target=self._start_recording, args=(video_name,fps))
         t.start()
 
     def stop_recording(self):
@@ -130,7 +139,7 @@ class ScreenRecorder:
         height, width, _ = frame.shape
 
         # making a videowriter object 
-        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width,height))
+        video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (width,height))
 
         # writing all the images to a video
         for image in images:
