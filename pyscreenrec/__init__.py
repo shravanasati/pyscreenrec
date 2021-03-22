@@ -1,8 +1,11 @@
+# type: ignore
 from pyscreeze import screenshot
 from time import sleep
+# type: ignore
 import cv2
 import os
 from threading import Thread
+# type: ignore
 from natsort import natsorted
 
 class InvalidCodec(Exception):
