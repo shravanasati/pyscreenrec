@@ -21,12 +21,13 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Screenshots**
-If applicable, add screenshots to help explain your problem.
+Add screenshot of the *pyscreenrec_data* folder (located in Documents). 
 
 **Desktop (please complete the following information):**
  - OS: [e.g. Windows, macOS]
- - Version [e.g. v0.1]
+ - Version of pyscreenrec you are using [e.g. v0.1]
  
 
 **Additional context**
 Add any other context about the problem here.
+You can add the code you're using.
