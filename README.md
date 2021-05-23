@@ -2,6 +2,8 @@
 
 *pyscreenrec* is a small and cross-platform python library for recording screen.
 
+**NO LONGER MAINTAINED.**
+
 [![Downloads](https://pepy.tech/badge/pyscreenrec)](https://pepy.tech/project/pyscreenrec)
 
 <br>

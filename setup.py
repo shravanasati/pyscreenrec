@@ -1,13 +1,13 @@
 from setuptools import find_packages, setup
 
-VERSION = 0.3
+VERSION = 0.4
 with open("README.md") as f:
     README = f.read()
 
 setup(
     name = "pyscreenrec",
     version = VERSION,
-    description = "A small python library to record screen.",
+    description = "A small and cross-platform python library for recording screen.",
     long_description_content_type = "text/markdown",
     long_description = README,
     url="https://github.com/Shravan-1908/pyscreenrec",
@@ -30,4 +30,4 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Topic :: Software Development :: Libraries"
     ]
-    )
+)
