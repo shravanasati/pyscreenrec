@@ -171,4 +171,4 @@ class ScreenRecorder:
             os.remove(os.path.join(self.screenshot_folder, image))
 
     def __repr__(self) -> str:
-        return "pyscreenrec is a small and cross-platform python library that can be used to record screen. \nFor more info, visit https://github.com/Shravan-1908/pyscreenrec#readme."
+        return "pyscreenrec is a small and cross-platform python library that can be used to record screen. \nFor more info, visit https://github.com/shravanasati/pyscreenrec#readme."

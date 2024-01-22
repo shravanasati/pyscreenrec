@@ -35,11 +35,11 @@ This section shows how you can setup your development environment to contribute 
 4. Make changes.
 5. Stage and commit (`git add .` and `git commit -m "COMMIT MESSAGE"`). 
 6. Push it your remote repository (`git push`).
-7. Open a pull request by clicking [here](https://github.com/Shravan-1908/pyscreenrec/compare). 
+7. Open a pull request by clicking [here](https://github.com/shravanasati/pyscreenrec/compare). 
 
 
 ## Reporting Issues
 
 If you know a bug in the code or you want to file a feature request, open an issue.
 
-Choose one of the issue templates by clicking [here](https://github.com/Shravan-1908/pyscreenrec/issues/new/choose).
+Choose one of the issue templates by clicking [here](https://github.com/shravanasati/pyscreenrec/issues/new/choose).

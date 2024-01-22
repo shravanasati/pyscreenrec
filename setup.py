@@ -10,7 +10,7 @@ setup(
     description = "A small and cross-platform python library for recording screen.",
     long_description_content_type = "text/markdown",
     long_description = README,
-    url="https://github.com/Shravan-1908/pyscreenrec",
+    url="https://github.com/shravanasati/pyscreenrec",
     author = "Shravan Asati",
     author_email = "dev.shravan@protonmail.com",
     packages = find_packages(),

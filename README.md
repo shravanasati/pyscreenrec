@@ -56,11 +56,11 @@ Changes made in the latest version (*v0.3*) are:
 - Introduced a one more exception class named `InvalidFPS`.
 - Minor bug fixes.
 
-View [CHANGELOG](https://github.com/Shravan-1908/pyscreenrec/blob/master/CHANGELOG) for more details.
+View [CHANGELOG](https://github.com/shravanasati/pyscreenrec/blob/master/CHANGELOG) for more details.
 
 <br>
 
 ## Contribution
 Pull requests are welcome. If you want to make a major change, open an issue first to discuss about the change.
 
-For further details, view [CONTRIBUTING.md](https://github.com/Shravan-1908/pyscreenrec/blob/master/CONTRIBUTING.md).
+For further details, view [CONTRIBUTING.md](https://github.com/shravanasati/pyscreenrec/blob/master/CONTRIBUTING.md).
