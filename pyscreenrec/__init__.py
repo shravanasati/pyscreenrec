@@ -31,12 +31,10 @@ class ScreenRecorder:
         self.__running = False
         self.__start_mode = "start"
         self.screenshot_folder = os.path.join(
-            os.path.expanduser("~"), "pyscreenrec_data"
+            os.path.expanduser("~"), ".pyscreenrec_data"
         )
+        os.makedirs(self.screenshot_folder, exist_ok=True)
 
-        # making the screenshot directory if not exists
-        if not os.path.exists(self.screenshot_folder):
-            os.mkdir(self.screenshot_folder)
         # clearing all the previous data if last session ended unsuccessfully
         self._clear_data()
 
