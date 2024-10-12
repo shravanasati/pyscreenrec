@@ -19,3 +19,11 @@ Change Log
 - Introduced a one more exception class named `InvalidFPS`.
 - Minor bug fixes.
 --------------
+
+0.4 (13/10/24)
+--------------
+- Remove the `HighFPSWarning` and `InvalidFPS` exception classes.
+- Raise frame count by almost 2 times.
+- Calling start and resume recording methods on an already running recorder instance raises a warning instead of printing, and vice versa.
+- Temporary screenshots are now stored in `~/.pyscreenrec_data` folder.
+--------------

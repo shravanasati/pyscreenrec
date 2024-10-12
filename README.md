@@ -2,7 +2,6 @@
 
 *pyscreenrec* is a small and cross-platform python library for recording screen.
 
-**NO LONGER MAINTAINED.**
 
 [![Downloads](https://pepy.tech/badge/pyscreenrec)](https://pepy.tech/project/pyscreenrec)
 
@@ -25,7 +24,7 @@ Install on Linux/macOS:
 >>> # to start recording
 >>> recorder.start_recording("recording.mp4", 10) 
 >>> # 'recording.mp4' is the name of the output video file, may also contain full path like 'C:/Users/<user>/Videos/video.mp4'
->>> # the second parameter(10) is the FPS. You can specify the FPS for the screen recording using the second parameter. It must not be greater than 60.
+>>> # the second parameter(10) is the FPS. You can specify the FPS for the screen recording using the second parameter.
 
 >>> # to pause recording
 >>> recorder.pause_recording()
@@ -40,11 +39,14 @@ Install on Linux/macOS:
 The `stop_recording` saves the video and deletes all screenshots used in the session. 
 So calling the `stop_recording` method is necessary when `start_recording` is called.
 
+If a screen recording session is already running, calling the `start_recording` and `resume_recording` methods raises a `ScreenRecodingInProgress` warning.
+
+Similarly, if a screen recording session is not running, calling the `stop_recording` and `pause_recording` methods raises a `NoScreenRecodingInProgress` warning.
 
 <br>
 
 ## Known limitations
-*pyscreenrec* is yet not able to:
+*pyscreenrec* is not able to:
 - capture the system sound during screen recording
 - capture only a certain part of the screen
 

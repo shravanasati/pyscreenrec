@@ -19,6 +19,24 @@ class InvalidStartMode(Exception):
     pass
 
 
+class ScreenRecordingInProgress(Warning):
+    """
+    This warning is raised when the `start_recording` or `resume_recording` methods
+    are called upon a `ScreenRecorder` instance which is already running.
+    """
+
+    pass
+
+
+class NoScreenRecordingInProgress(Warning):
+    """
+    This warning is raised when the `stop_recording` or `pause_recording` methods
+    are called upon a `ScreenRecorder` instance which is not running.
+    """
+
+    pass
+
+
 class ScreenRecorder:
     """
     Base class for screen recording.
@@ -57,9 +75,7 @@ class ScreenRecorder:
 
         # checking if screen is already being recorded
         if self.__running:
-            # todo decide the behavior on such cases
-            # whether an error/warning should be raised or ignored
-            print("Screen recording is already running.")
+            raise ScreenRecordingInProgress("Screen recording is already running.")
 
         else:
             if self.__start_mode == "start":
@@ -125,10 +141,8 @@ class ScreenRecorder:
         Stops screen recording.
         """
         if not self.__running:
-            # todo decide the behavior on such cases
-            # whether an error/warning should be raised or ignored
-            print("No screen recording session is going on.")
-            return None
+            raise NoScreenRecordingInProgress("No screen recording session is going on.")
+
         self.__running = False
 
         # saving the video and clearing all screenshots
@@ -140,10 +154,7 @@ class ScreenRecorder:
         Pauses screen recording.
         """
         if not self.__running:
-            # todo decide the behavior on such cases
-            # whether an error/warning should be raised or ignored
-            print("No screen recording session is going on.")
-            return None
+            raise NoScreenRecordingInProgress("No screen recording session is going on.")
 
         self.__running = False
 
@@ -152,10 +163,7 @@ class ScreenRecorder:
         Resumes screen recording.
         """
         if self.__running:
-            # todo decide the behavior on such cases
-            # whether an error/warning should be raised or ignored
-            print("Screen recording is already running.")
-            return None
+            raise ScreenRecordingInProgress("Screen recording is already running.")
 
         self.__start_mode = "resume"
         self.start_recording(self.video_name)
