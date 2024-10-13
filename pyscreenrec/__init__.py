@@ -1,6 +1,6 @@
 import os
 from threading import Thread
-from time import sleep
+import time
 from warnings import warn
 
 import cv2
@@ -53,7 +53,17 @@ class ScreenRecorder:
         # clearing all the previous data if last session ended unsuccessfully
         self._clear_data()
 
-    def _start_recording(self, video_name: str, fps: int) -> None:
+    def _screenshot(self, filename: str) -> float:
+        """
+        A helper function which saves a screenshot to `self.screenshot_folder` with the
+        given filename, and returns the duration it took to perform the operation.
+        """
+        st_start = time.perf_counter()
+        screenshot(os.path.join(self.screenshot_folder, filename))
+        st_end = time.perf_counter()
+        return st_end - st_start
+
+    def _start_recording(self) -> None:
         """
         (Protected) Starts screen recording.
 
@@ -63,12 +73,11 @@ class ScreenRecorder:
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
+        print("hello In runing")
         # checking for video extension and fps
-        if not video_name.endswith(".mp4"):
+        if not self.video_name.endswith(".mp4"):
             raise InvalidCodec("The video's extension can only be '.mp4'.")
 
-        self.fps = fps
-        self.video_name = video_name
 
         # checking if screen is already being recorded
         if self.__running:
@@ -81,10 +90,6 @@ class ScreenRecorder:
 
                 # starting screenshotting
                 while self.__running:
-                    st_start = time.perf_counter()
-                    screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
-                    st_end = time.perf_counter()
-                    st_total = st_end - st_start
                     # not sleeping for exactly 1/self.fps seconds because
                     # otherwise time is lost in sleeping which could be used in
                     # capturing frames
@@ -92,7 +97,8 @@ class ScreenRecorder:
                     # thread doesn't get all the time that it needs
                     # thus, if more than required time has been spent just on
                     # screenshotting, don't sleep at all
-                    sleep(max(0, 1 / self.fps - st_total))
+                    st_total = self._screenshot(f"s{i}.jpg")
+                    time.sleep(max(0, 1 / self.fps - st_total))
                     i += 1
 
             elif self.__start_mode == "resume":
@@ -111,8 +117,8 @@ class ScreenRecorder:
                 )
 
                 while self.__running:
-                    screenshot(os.path.join(self.screenshot_folder, f"s{i}.jpg"))
-                    sleep(1 / self.fps)
+                    st_total = self._screenshot(f"s{i}.jpg")
+                    time.sleep(max(0, 1 / self.fps - st_total))
                     i += 1
 
             else:
@@ -130,7 +136,9 @@ class ScreenRecorder:
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
-        t = Thread(target=self._start_recording, args=(video_name, fps))
+        self.fps = fps
+        self.video_name = video_name
+        t = Thread(target=self._start_recording)
         t.start()
 
     def stop_recording(self) -> None:
@@ -210,8 +218,6 @@ class ScreenRecorder:
 
 
 if __name__ == "__main__":
-    import time
-
     rec = ScreenRecorder()
     print("recording started")
     rec.start_recording(fps=30)
