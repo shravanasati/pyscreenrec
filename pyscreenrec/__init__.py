@@ -1,14 +1,11 @@
-# type: ignore
-from pyscreeze import screenshot
-from time import sleep
-
-# type: ignore
-import cv2
 import os
 from threading import Thread
+from time import sleep
+from warnings import warn
 
-# type: ignore
+import cv2
 from natsort import natsorted
+from pyscreeze import screenshot
 
 
 class InvalidCodec(Exception):
@@ -75,7 +72,7 @@ class ScreenRecorder:
 
         # checking if screen is already being recorded
         if self.__running:
-            raise ScreenRecordingInProgress("Screen recording is already running.")
+            warn("Screen recording is already running.", ScreenRecordingInProgress)
 
         else:
             if self.__start_mode == "start":
@@ -141,7 +138,8 @@ class ScreenRecorder:
         Stops screen recording.
         """
         if not self.__running:
-            raise NoScreenRecordingInProgress("No screen recording session is going on.")
+            warn("No screen recording session is going on.", NoScreenRecordingInProgress)
+            return
 
         self.__running = False
 
@@ -154,7 +152,8 @@ class ScreenRecorder:
         Pauses screen recording.
         """
         if not self.__running:
-            raise NoScreenRecordingInProgress("No screen recording session is going on.")
+            warn("No screen recording session is going on.", NoScreenRecordingInProgress)
+            return
 
         self.__running = False
 
@@ -163,7 +162,8 @@ class ScreenRecorder:
         Resumes screen recording.
         """
         if self.__running:
-            raise ScreenRecordingInProgress("Screen recording is already running.")
+            warn("Screen recording is already running.", ScreenRecordingInProgress)
+            return
 
         self.__start_mode = "resume"
         self.start_recording(self.video_name)
@@ -215,6 +215,8 @@ if __name__ == "__main__":
     rec = ScreenRecorder()
     print("recording started")
     rec.start_recording(fps=30)
+    rec.resume_recording()
     time.sleep(10)
     print("recording ended")
     rec.stop_recording()
+    rec.pause_recording()

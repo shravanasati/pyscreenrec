@@ -20,7 +20,7 @@ Change Log
 - Minor bug fixes.
 --------------
 
-0.4 (13/10/24)
+0.5 (13/10/24)
 --------------
 - Remove the `HighFPSWarning` and `InvalidFPS` exception classes.
 - Raise frame count by almost 2 times.
