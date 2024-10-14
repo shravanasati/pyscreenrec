@@ -36,6 +36,8 @@ Install on Linux/macOS:
 >>> recorder.stop_recording()
 ```
 
+Keep in mind that the `start_recording` method is non-blocking, it will start a thread in the background to capture the screenshots.
+
 The `stop_recording` saves the video and deletes all screenshots used in the session. 
 So calling the `stop_recording` method is necessary when `start_recording` is called.
 
@@ -53,10 +55,13 @@ Similarly, if a screen recording session is not running, calling the `stop_recor
 <br>
 
 ## Change Log
-Changes made in the latest version (*v0.3*) are:
-- Manually set FPS for the screen recording, by an extra `fps` argument in `start_recording` method.
-- Introduced a one more exception class named `InvalidFPS`.
-- Minor bug fixes.
+Changes made in the latest version (*v0.5*) are:
+- Remove the `HighFPSWarning` and `InvalidFPS` exception classes.
+- Raise frame count by almost 2 times.
+- Calling start and resume recording methods on an already running recorder instance raises a warning instead of printing, and vice versa.
+- Temporary screenshots are now stored in `~/.pyscreenrec_data` folder.
+- Internal refactors.
+
 
 View [CHANGELOG](https://github.com/shravanasati/pyscreenrec/blob/master/CHANGELOG) for more details.
 
