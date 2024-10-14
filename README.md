@@ -9,10 +9,10 @@
 
 ## Installation
 Install on Windows: 
-`pip install pyscreenrec`
+`pip install -U pyscreenrec`
 
 Install on Linux/macOS: 
-`pip3 install pyscreenrec`
+`pip3 install -U pyscreenrec`
 
 <br>
 
