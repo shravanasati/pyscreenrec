@@ -53,6 +53,9 @@ class ScreenRecorder:
         # clearing all the previous data if last session ended unsuccessfully
         self._clear_data()
 
+        # used for maintaining screenshot count
+        self.__count = 1
+
     def _screenshot(self, filename: str) -> float:
         """
         A helper function which saves a screenshot to `self.screenshot_folder` with the
@@ -73,58 +76,29 @@ class ScreenRecorder:
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
-        print("hello In runing")
-        # checking for video extension and fps
-        if not self.video_name.endswith(".mp4"):
-            raise InvalidCodec("The video's extension can only be '.mp4'.")
-
-
         # checking if screen is already being recorded
         if self.__running:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
 
         else:
-            if self.__start_mode == "start":
-                self.__running = True
-                i = 1
-
-                # starting screenshotting
-                while self.__running:
-                    # not sleeping for exactly 1/self.fps seconds because
-                    # otherwise time is lost in sleeping which could be used in
-                    # capturing frames
-                    # since due to thread context-switching, this screenshotter
-                    # thread doesn't get all the time that it needs
-                    # thus, if more than required time has been spent just on
-                    # screenshotting, don't sleep at all
-                    st_total = self._screenshot(f"s{i}.jpg")
-                    time.sleep(max(0, 1 / self.fps - st_total))
-                    i += 1
-
-            elif self.__start_mode == "resume":
-                self.__running = True
-                i = (
-                    len(
-                        natsorted(
-                            [
-                                img
-                                for img in os.listdir(self.screenshot_folder)
-                                if img.endswith(".jpg")
-                            ]
-                        )
-                    )
-                    + 1
-                )
-
-                while self.__running:
-                    st_total = self._screenshot(f"s{i}.jpg")
-                    time.sleep(max(0, 1 / self.fps - st_total))
-                    i += 1
-
-            else:
+            if self.__start_mode not in ("start", "resume"):
                 raise InvalidStartMode(
                     "The `self.__start_mode` can only be 'start' or 'resume'."
                 )
+
+            self.__running = True
+
+            while self.__running:
+                # not sleeping for exactly 1/self.fps seconds because
+                # otherwise time is lost in sleeping which could be used in
+                # capturing frames
+                # since due to thread context-switching, this screenshotter
+                # thread doesn't get all the time that it needs
+                # thus, if more than required time has been spent just on
+                # screenshotting, don't sleep at all
+                st_total = self._screenshot(f"s{self.__count}.jpg")
+                time.sleep(max(0, 1 / self.fps - st_total))
+                self.__count += 1
 
     def start_recording(self, video_name: str = "Recording.mp4", fps: int = 15) -> None:
         """
@@ -138,6 +112,11 @@ class ScreenRecorder:
         """
         self.fps = fps
         self.video_name = video_name
+
+        # checking for video extension
+        if not self.video_name.endswith(".mp4"):
+            raise InvalidCodec("The video's extension can only be '.mp4'.")
+
         t = Thread(target=self._start_recording)
         t.start()
 
@@ -146,10 +125,15 @@ class ScreenRecorder:
         Stops screen recording.
         """
         if not self.__running:
-            warn("No screen recording session is going on.", NoScreenRecordingInProgress)
+            warn(
+                "No screen recording session is going on.", NoScreenRecordingInProgress
+            )
             return
 
         self.__running = False
+        # reset screenshot count and start_mode
+        self.__count = 1
+        self.__start_mode = "start"
 
         # saving the video and clearing all screenshots
         self._save_video(self.video_name)
@@ -160,7 +144,9 @@ class ScreenRecorder:
         Pauses screen recording.
         """
         if not self.__running:
-            warn("No screen recording session is going on.", NoScreenRecordingInProgress)
+            warn(
+                "No screen recording session is going on.", NoScreenRecordingInProgress
+            )
             return
 
         self.__running = False
@@ -221,8 +207,12 @@ if __name__ == "__main__":
     rec = ScreenRecorder()
     print("recording started")
     rec.start_recording(fps=30)
+    time.sleep(5)
+    print("pausing")
+    rec.pause_recording()
+    time.sleep(2)
+    print("resuming")
     rec.resume_recording()
-    time.sleep(10)
+    time.sleep(5)
     print("recording ended")
     rec.stop_recording()
-    rec.pause_recording()
