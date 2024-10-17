@@ -5,7 +5,7 @@ from warnings import warn
 
 import cv2
 from natsort import natsorted
-from pyscreeze import screenshot
+from mss import mss
 
 
 class InvalidCodec(Exception):
@@ -55,6 +55,7 @@ class ScreenRecorder:
 
         # used for maintaining screenshot count
         self.__count = 1
+        self.screenshotter = mss()
 
     def _screenshot(self, filename: str) -> float:
         """
@@ -62,6 +63,7 @@ class ScreenRecorder:
         given filename, and returns the duration it took to perform the operation.
         """
         st_start = time.perf_counter()
+        self.screenshotter.save()
         screenshot(os.path.join(self.screenshot_folder, filename))
         st_end = time.perf_counter()
         return st_end - st_start
