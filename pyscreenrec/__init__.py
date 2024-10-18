@@ -55,7 +55,6 @@ class ScreenRecorder:
 
         # used for maintaining screenshot count
         self.__count = 1
-        self.screenshotter = mss()
 
     def _screenshot(self, filename: str) -> float:
         """
@@ -63,8 +62,7 @@ class ScreenRecorder:
         given filename, and returns the duration it took to perform the operation.
         """
         st_start = time.perf_counter()
-        self.screenshotter.save()
-        screenshot(os.path.join(self.screenshot_folder, filename))
+        self.screenshotter.shot(output=os.path.join(self.screenshot_folder, filename))
         st_end = time.perf_counter()
         return st_end - st_start
 
@@ -78,6 +76,11 @@ class ScreenRecorder:
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
+        # ! not instantiating this in the constructor because mss has issues
+        # ! with using instances from main thread in sub-threads
+        # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
+        self.screenshotter = mss()
+
         # checking if screen is already being recorded
         if self.__running:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
@@ -98,7 +101,7 @@ class ScreenRecorder:
                 # thread doesn't get all the time that it needs
                 # thus, if more than required time has been spent just on
                 # screenshotting, don't sleep at all
-                st_total = self._screenshot(f"s{self.__count}.jpg")
+                st_total = self._screenshot(f"s{self.__count}.png")
                 time.sleep(max(0, 1 / self.fps - st_total))
                 self.__count += 1
 
@@ -174,9 +177,9 @@ class ScreenRecorder:
         """
         # fetching image info
         images = natsorted(
-            [img for img in os.listdir(self.screenshot_folder) if img.endswith(".jpg")]
+            [img for img in os.listdir(self.screenshot_folder) if img.endswith(".png")]
         )
-        # print(f"{len(images)=}")
+        print(f"{len(images)=}")
         frame = cv2.imread(os.path.join(self.screenshot_folder, images[0]))
         height, width, _ = frame.shape
 
@@ -209,12 +212,14 @@ if __name__ == "__main__":
     rec = ScreenRecorder()
     print("recording started")
     rec.start_recording(fps=30)
-    time.sleep(5)
-    print("pausing")
-    rec.pause_recording()
-    time.sleep(2)
-    print("resuming")
-    rec.resume_recording()
-    time.sleep(5)
+    time.sleep(10)
     print("recording ended")
     rec.stop_recording()
+    # print("pausing")
+    # rec.pause_recording()
+    # time.sleep(2)
+    # print("resuming")
+    # rec.resume_recording()
+    # time.sleep(5)
+    # print("recording ended")
+    # rec.stop_recording()
