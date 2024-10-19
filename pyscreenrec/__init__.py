@@ -1,11 +1,12 @@
+from multiprocessing import Queue, Process, Value
 import os
-from threading import Thread
 import time
 from warnings import warn
 
 import cv2
 from natsort import natsorted
-from mss import mss
+from mss import mss, tools as mss_tools
+from pyscreeze import screenshot
 
 
 class InvalidCodec(Exception):
@@ -43,7 +44,8 @@ class ScreenRecorder:
         """
         Constructor.
         """
-        self.__running = False
+        # 0 -> False, 1 -> True
+        self.__running = Value("i", 0)
         self.__start_mode = "start"
         self.screenshot_folder = os.path.join(
             os.path.expanduser("~"), ".pyscreenrec_data"
@@ -55,6 +57,7 @@ class ScreenRecorder:
 
         # used for maintaining screenshot count
         self.__count = 1
+        self.queue = Queue()
 
     def _screenshot(self, filename: str) -> float:
         """
@@ -62,7 +65,8 @@ class ScreenRecorder:
         given filename, and returns the duration it took to perform the operation.
         """
         st_start = time.perf_counter()
-        self.screenshotter.shot(output=os.path.join(self.screenshot_folder, filename))
+        # self.screenshotter.shot(output=os.path.join(self.screenshot_folder, filename))
+        screenshot(os.path.join(self.screenshot_folder, filename))
         st_end = time.perf_counter()
         return st_end - st_start
 
@@ -80,9 +84,10 @@ class ScreenRecorder:
         # ! with using instances from main thread in sub-threads
         # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
         self.screenshotter = mss()
+        mon = self.screenshotter.monitors[0]
 
         # checking if screen is already being recorded
-        if self.__running:
+        if self.__running.value != 0:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
 
         else:
@@ -91,9 +96,9 @@ class ScreenRecorder:
                     "The `self.__start_mode` can only be 'start' or 'resume'."
                 )
 
-            self.__running = True
+            self.__running.value = 1
 
-            while self.__running:
+            while self.__running.value != 0:
                 # not sleeping for exactly 1/self.fps seconds because
                 # otherwise time is lost in sleeping which could be used in
                 # capturing frames
@@ -101,9 +106,25 @@ class ScreenRecorder:
                 # thread doesn't get all the time that it needs
                 # thus, if more than required time has been spent just on
                 # screenshotting, don't sleep at all
-                st_total = self._screenshot(f"s{self.__count}.png")
+                st_start = time.perf_counter()
+                self.queue.put(self.screenshotter.grab(mon))
+                st_end = time.perf_counter()
+                st_total = st_end - st_start
+                # st_total = self._screenshot(f"s{self.__count}.png")
                 time.sleep(max(0, 1 / self.fps - st_total))
-                self.__count += 1
+                # self.__count += 1
+
+        # signal _save_image process to quit
+        self.queue.put(None)
+
+    def _save_image(self):
+        output = os.path.join(self.screenshot_folder, "s{}.png")
+        while True:
+            img = self.queue.get()
+            if img is None:
+                break
+            mss_tools.to_png(img.rgb, img.size, output=output.format(self.__count))
+            self.__count += 1
 
     def start_recording(self, video_name: str = "Recording.mp4", fps: int = 15) -> None:
         """
@@ -122,20 +143,26 @@ class ScreenRecorder:
         if not self.video_name.endswith(".mp4"):
             raise InvalidCodec("The video's extension can only be '.mp4'.")
 
-        t = Thread(target=self._start_recording)
-        t.start()
+        recorder_process = Process(target=self._start_recording)
+        self.saver_process = Process(target=self._save_image)
+        recorder_process.start()
+        self.saver_process.start()
 
     def stop_recording(self) -> None:
         """
         Stops screen recording.
         """
-        if not self.__running:
+        if self.__running.value == 0:
             warn(
                 "No screen recording session is going on.", NoScreenRecordingInProgress
             )
             return
 
-        self.__running = False
+        # stop both the processes
+        self.__running.value = 0
+        # wait until saver process has finished working
+        self.saver_process.join()
+
         # reset screenshot count and start_mode
         self.__count = 1
         self.__start_mode = "start"
@@ -148,19 +175,19 @@ class ScreenRecorder:
         """
         Pauses screen recording.
         """
-        if not self.__running:
+        if self.__running.value == 0:
             warn(
                 "No screen recording session is going on.", NoScreenRecordingInProgress
             )
             return
 
-        self.__running = False
+        self.__running.value = 0
 
     def resume_recording(self) -> None:
         """
         Resumes screen recording.
         """
-        if self.__running:
+        if self.__running.value != 0:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
             return
 
