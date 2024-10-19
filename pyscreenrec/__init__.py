@@ -108,10 +108,9 @@ class ScreenRecorder:
                 # screenshotting, don't sleep at all
                 st_start = time.perf_counter()
                 self.queue.put(self.screenshotter.grab(mon))
-                st_end = time.perf_counter()
-                st_total = st_end - st_start
-                # st_total = self._screenshot(f"s{self.__count}.png")
+                st_total = time.perf_counter() - st_start
                 time.sleep(max(0, 1 / self.fps - st_total))
+                # st_total = self._screenshot(f"s{self.__count}.png")
                 # self.__count += 1
 
         # signal _save_image process to quit
