@@ -4,9 +4,10 @@ import time
 from warnings import warn
 
 import cv2
+import mss.screenshot
 from natsort import natsorted
-from mss import mss, tools as mss_tools
-from pyscreeze import screenshot
+import mss
+import mss.tools
 
 
 class InvalidCodec(Exception):
@@ -34,6 +35,8 @@ class NoScreenRecordingInProgress(Warning):
 
     pass
 
+# todo region of the screen
+
 
 class ScreenRecorder:
     """
@@ -57,18 +60,7 @@ class ScreenRecorder:
 
         # used for maintaining screenshot count
         self.__count = 1
-        self.queue = Queue()
-
-    def _screenshot(self, filename: str) -> float:
-        """
-        A helper function which saves a screenshot to `self.screenshot_folder` with the
-        given filename, and returns the duration it took to perform the operation.
-        """
-        st_start = time.perf_counter()
-        # self.screenshotter.shot(output=os.path.join(self.screenshot_folder, filename))
-        screenshot(os.path.join(self.screenshot_folder, filename))
-        st_end = time.perf_counter()
-        return st_end - st_start
+        self.queue: Queue[mss.screenshot.ScreenShot | None] = Queue()
 
     def _start_recording(self) -> None:
         """
@@ -83,8 +75,8 @@ class ScreenRecorder:
         # ! not instantiating this in the constructor because mss has issues
         # ! with using instances from main thread in sub-threads
         # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
-        self.screenshotter = mss()
-        mon = self.screenshotter.monitors[0]
+        sct = mss.mss()
+        mon = sct.monitors[0]
 
         # checking if screen is already being recorded
         if self.__running.value != 0:
@@ -107,11 +99,9 @@ class ScreenRecorder:
                 # thus, if more than required time has been spent just on
                 # screenshotting, don't sleep at all
                 st_start = time.perf_counter()
-                self.queue.put(self.screenshotter.grab(mon))
+                self.queue.put(sct.grab(mon))
                 st_total = time.perf_counter() - st_start
                 time.sleep(max(0, 1 / self.fps - st_total))
-                # st_total = self._screenshot(f"s{self.__count}.png")
-                # self.__count += 1
 
         # signal _save_image process to quit
         self.queue.put(None)
@@ -122,10 +112,10 @@ class ScreenRecorder:
             img = self.queue.get()
             if img is None:
                 break
-            mss_tools.to_png(img.rgb, img.size, output=output.format(self.__count))
+            mss.tools.to_png(img.rgb, img.size, output=output.format(self.__count))
             self.__count += 1
 
-    def start_recording(self, video_name: str = "Recording.mp4", fps: int = 15) -> None:
+    def start_recording(self, video_name: str, fps: int) -> None:
         """
         Starts screen recording.
 
@@ -191,7 +181,7 @@ class ScreenRecorder:
             return
 
         self.__start_mode = "resume"
-        self.start_recording(self.video_name)
+        self.start_recording(self.video_name, self.fps)
 
     def _save_video(self, video_name: str) -> None:
         """
@@ -237,15 +227,13 @@ class ScreenRecorder:
 if __name__ == "__main__":
     rec = ScreenRecorder()
     print("recording started")
-    rec.start_recording(fps=30)
-    time.sleep(10)
+    rec.start_recording("Recording.mp4", fps=30)
+    time.sleep(5)
+    print("pausing")
+    rec.pause_recording()
+    time.sleep(2)
+    print("resuming")
+    rec.resume_recording()
+    time.sleep(5)
     print("recording ended")
     rec.stop_recording()
-    # print("pausing")
-    # rec.pause_recording()
-    # time.sleep(2)
-    # print("resuming")
-    # rec.resume_recording()
-    # time.sleep(5)
-    # print("recording ended")
-    # rec.stop_recording()
