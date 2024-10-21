@@ -10,14 +10,6 @@ import mss
 import mss.tools
 
 
-class InvalidCodec(Exception):
-    pass
-
-
-class InvalidStartMode(Exception):
-    pass
-
-
 class ScreenRecordingInProgress(Warning):
     """
     This warning is raised when the `start_recording` or `resume_recording` methods
@@ -35,7 +27,10 @@ class NoScreenRecordingInProgress(Warning):
 
     pass
 
+
 # todo region of the screen
+# todo multiple saver processes
+# todo consider writing to the video stream directly
 
 
 class ScreenRecorder:
@@ -49,7 +44,6 @@ class ScreenRecorder:
         """
         # 0 -> False, 1 -> True
         self.__running = Value("i", 0)
-        self.__start_mode = "start"
         self.screenshot_folder = os.path.join(
             os.path.expanduser("~"), ".pyscreenrec_data"
         )
@@ -83,11 +77,6 @@ class ScreenRecorder:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
 
         else:
-            if self.__start_mode not in ("start", "resume"):
-                raise InvalidStartMode(
-                    "The `self.__start_mode` can only be 'start' or 'resume'."
-                )
-
             self.__running.value = 1
 
             while self.__running.value != 0:
@@ -130,7 +119,7 @@ class ScreenRecorder:
 
         # checking for video extension
         if not self.video_name.endswith(".mp4"):
-            raise InvalidCodec("The video's extension can only be '.mp4'.")
+            raise ValueError("The video's extension can only be '.mp4'.")
 
         recorder_process = Process(target=self._start_recording)
         self.saver_process = Process(target=self._save_image)
@@ -152,9 +141,8 @@ class ScreenRecorder:
         # wait until saver process has finished working
         self.saver_process.join()
 
-        # reset screenshot count and start_mode
+        # reset screenshot count
         self.__count = 1
-        self.__start_mode = "start"
 
         # saving the video and clearing all screenshots
         self._save_video(self.video_name)
@@ -180,7 +168,6 @@ class ScreenRecorder:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
             return
 
-        self.__start_mode = "resume"
         self.start_recording(self.video_name, self.fps)
 
     def _save_video(self, video_name: str) -> None:
