@@ -1,6 +1,7 @@
 from multiprocessing import Queue, Process, Value
 import os
 import time
+from uuid import uuid4
 from warnings import warn
 
 import cv2
@@ -39,7 +40,6 @@ class NoScreenshotFoundError(Exception):
 # todo region of the screen
 # todo multiple saver processes
 # todo consider writing to the video stream directly
-# todo new folder per screen recorder instance
 # todo update docs
 
 
@@ -58,7 +58,7 @@ class ScreenRecorder:
         # 0 -> False, 1 -> True
         self.__running = Value("i", 0)
         self.screenshot_folder = os.path.join(
-            os.path.expanduser("~"), ".pyscreenrec_data"
+            os.path.expanduser("~"), ".pyscreenrec_data", str(uuid4())
         )
         os.makedirs(self.screenshot_folder, exist_ok=True)
 
