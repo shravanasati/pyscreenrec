@@ -84,11 +84,9 @@ class ScreenRecorder:
                     # thus, if more than required time has been spent just on
                     # screenshotting, don't sleep at all
                     st_start = time.perf_counter()
-                    self.video.write(np.array(sct.grab(mon)))
+                    self.video.write(cv2.cvtColor(np.array(sct.grab(mon)), cv2.COLOR_BGRA2BGR))
                     st_total = time.perf_counter() - st_start
                     time.sleep(max(0, 1 / self.fps - st_total))
-
-        print("_start_recording stopped")
 
     def start_recording(self, video_name: str, fps: int) -> None:
         """
@@ -178,11 +176,11 @@ if __name__ == "__main__":
     print("recording started")
     rec.start_recording("Recording.mp4", fps=30)
     time.sleep(5)
-    # print("pausing")
-    # rec.pause_recording()
-    # time.sleep(2)
-    # print("resuming")
-    # rec.resume_recording()
-    # time.sleep(5)
+    print("pausing")
+    rec.pause_recording()
+    time.sleep(2)
+    print("resuming")
+    rec.resume_recording()
+    time.sleep(5)
     print("recording ended")
     rec.stop_recording()
