@@ -1,5 +1,5 @@
-from threading import Thread
 from multiprocessing import Queue, Value
+from threading import Thread
 import os
 import time
 from uuid import uuid4
@@ -84,7 +84,7 @@ class ScreenRecorder:
                     # thus, if more than required time has been spent just on
                     # screenshotting, don't sleep at all
                     st_start = time.perf_counter()
-                    self.video.write(cv2.cvtColor(np.array(sct.grab(mon)), cv2.COLOR_BGRA2BGR))
+                    self.queue.put(sct.grab(mon))
                     st_total = time.perf_counter() - st_start
                     time.sleep(max(0, 1 / self.fps - st_total))
 
@@ -100,12 +100,6 @@ class ScreenRecorder:
         """
         self.fps = fps
         self.video_name = video_name
-        with mss.mss() as sct:
-            mon = sct.monitors[0]
-            width, height = mon["width"], mon["height"]
-        self.video = cv2.VideoWriter(
-            self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
-        )
 
         # checking for video extension
         if not self.video_name.endswith(".mp4"):
@@ -113,6 +107,26 @@ class ScreenRecorder:
 
         self.recorder_thread = Thread(target=self._start_recording)
         self.recorder_thread.start()
+        self.saver_proc = Thread(target=self._write_img_to_stream)
+        self.saver_proc.start()
+
+    def _write_img_to_stream(self):
+        with mss.mss() as sct:
+            mon = sct.monitors[0]
+            width, height = mon["width"], mon["height"]
+        video = cv2.VideoWriter(
+            self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
+        )
+        count = 0
+        while True:
+            img = self.queue.get()
+            if img is None:
+                break
+            video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
+            count += 1
+
+        print(count)
+        video.release()
 
     def stop_recording(self) -> None:
         """
@@ -128,13 +142,11 @@ class ScreenRecorder:
 
         # stop both the processes
         self.__running.value = 0
-        # signal _save_image process to quit
         self.recorder_thread.join()
-        self.video.release()
-        # self.queue.put(None)
-        # wait until saver process has finished working
-        # if self.saver_process is not None:
-        #     self.saver_process.join()
+
+        # signal _save_image process to quit
+        self.queue.put(None)
+        self.saver_proc.join()
 
         # reset screenshot count
         # self.__count = 1
@@ -175,12 +187,12 @@ if __name__ == "__main__":
     rec = ScreenRecorder()
     print("recording started")
     rec.start_recording("Recording.mp4", fps=30)
-    time.sleep(5)
-    print("pausing")
-    rec.pause_recording()
-    time.sleep(2)
-    print("resuming")
-    rec.resume_recording()
-    time.sleep(5)
+    time.sleep(10)
+    # print("pausing")
+    # rec.pause_recording()
+    # time.sleep(2)
+    # print("resuming")
+    # rec.resume_recording()
+    # time.sleep(5)
     print("recording ended")
     rec.stop_recording()
