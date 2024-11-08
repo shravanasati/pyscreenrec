@@ -1,11 +1,10 @@
 [tool.poetry]
 name = "pyscreenrec"
 version = "0.6"
-description = "A small and cross-platform python library for recording screens."
+description = "A small and cross-platform python library for recording screen."
 authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
 license = "MIT"
 readme = "README.md"
-package-mode = false
 keywords = ["python", "screen recording", "screen", "recording", "screenshots"]
 classifiers = [
 	"Development Status :: 3 - Alpha",
@@ -24,8 +23,6 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.26.4"
-natsort = "^8.4.0"
-pillow = "^10.4.0"
 opencv-python = "^4.9"
 mss = "^9.0.2"
 

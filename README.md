@@ -36,7 +36,7 @@ Install on Linux/macOS:
 >>> recorder.stop_recording()
 ```
 
-Keep in mind that the `start_recording` method is non-blocking, it will start a process in the background to capture the screenshots.
+Keep in mind that the `start_recording` method is non-blocking, it will start a thread in the background to capture the screenshots.
 
 The `stop_recording` saves the video and deletes all screenshots used in the session. 
 So calling the `stop_recording` method is necessary when `start_recording` is called.
