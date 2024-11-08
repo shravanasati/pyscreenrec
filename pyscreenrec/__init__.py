@@ -1,14 +1,11 @@
 from multiprocessing import Queue, Value
 from threading import Thread
-import os
 import time
-from uuid import uuid4
 from warnings import warn
 
 import cv2
-import mss.screenshot
 import mss
-import mss.tools
+from mss.screenshot import ScreenShot
 import numpy as np
 
 
@@ -31,8 +28,6 @@ class NoScreenRecordingInProgress(Warning):
 
 
 # todo region of the screen
-# todo consider writing to the video stream directly
-# todo update docs
 
 
 class ScreenRecorder:
@@ -46,21 +41,16 @@ class ScreenRecorder:
         """
         # 0 -> False, 1 -> True
         self.__running = Value("i", 0)
-        self.screenshot_folder = os.path.join(
-            os.path.expanduser("~"), ".pyscreenrec_data", str(uuid4())
-        )
-        os.makedirs(self.screenshot_folder, exist_ok=True)
-        self.queue: Queue[mss.screenshot.ScreenShot | None] = Queue()
+        self.queue: Queue[ScreenShot | None] = Queue()
 
     def _start_recording(self) -> None:
         """
         (Protected) Starts screen recording.
 
-        @params
-
-        video_name (str) --> The name of the screen recording video.
-
-        fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
+        This function is meant to be run in a separate thread.
+        It continuosly grabs screenshots using mss and sends them
+        to the saver thread, which is responsible for writing these
+        images to the video stream.
         """
         # ! not instantiating this in the constructor because mss has issues
         # ! with using instances from main thread in sub-threads
@@ -90,11 +80,16 @@ class ScreenRecorder:
 
     def start_recording(self, video_name: str, fps: int) -> None:
         """
-        Starts screen recording.
+        Starts screen recording. It is a non-blocking call.
+        The `stop_recording` method must be called after this
+        function call for the video to be rendered.
+
+        Raises a warning `ScreenRecordingInProgress` if this method is called while
+        the screen recording is already running.
 
         @params
 
-        video_name (str) --> The name of the output screen recording.
+        video_name (str) --> The name of the output screen recording. Must end with `.mp4`.
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
         """
@@ -111,28 +106,34 @@ class ScreenRecorder:
         self.saver_proc.start()
 
     def _write_img_to_stream(self):
+        """
+        (Protected) This function is also meant to be run in a separate thread.
+
+        It creates a video writer object and listens on the queue for images that
+        need to written to the video, and also releases the video when `stop_recording`
+        is called.
+        """
         with mss.mss() as sct:
             mon = sct.monitors[0]
             width, height = mon["width"], mon["height"]
         video = cv2.VideoWriter(
             self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
         )
-        count = 0
+
         while True:
             img = self.queue.get()
             if img is None:
                 break
             video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
-            count += 1
 
-        print(count)
         video.release()
 
     def stop_recording(self) -> None:
         """
         Stops screen recording.
 
-        Raises `NoScreenshotFoundError` if no screenshots were captured.
+        Raises a warning `NoScreenRecordingInProgress` if this method is called while
+        no screen recording is already running.
         """
         if self.__running.value == 0:
             warn(
@@ -148,16 +149,12 @@ class ScreenRecorder:
         self.queue.put(None)
         self.saver_proc.join()
 
-        # reset screenshot count
-        # self.__count = 1
-
-        # saving the video and clearing all screenshots
-        # self._save_video()
-        # self._clear_data()
-
     def pause_recording(self) -> None:
         """
         Pauses screen recording.
+
+        Raises a warning `NoScreenRecordingInProgress` if this method is called while
+        no screen recording is already running.
         """
         if self.__running.value == 0:
             warn(
@@ -170,29 +167,37 @@ class ScreenRecorder:
     def resume_recording(self) -> None:
         """
         Resumes screen recording.
+
+        Raises a warning `ScreenRecordingInProgress` if this method is called while
+        the screen recording is already running.
         """
         if self.__running.value != 0:
             warn("Screen recording is already running.", ScreenRecordingInProgress)
             return
 
-        # self.start_recording(self.video_name, self.fps)
+        # the first call to start_recording already sets up saver process
+        # so we dont need to start it again
         self.recorder_thread = Thread(target=self._start_recording)
         self.recorder_thread.start()
 
     def __repr__(self) -> str:
-        return "pyscreenrec is a small and cross-platform python library that can be used to record screen. \nFor more info, visit https://github.com/shravanasati/pyscreenrec#readme."
+        return f"ScreenRecorder <running = {bool(self.__running.value)}>"
 
 
 if __name__ == "__main__":
     rec = ScreenRecorder()
+
     print("recording started")
     rec.start_recording("Recording.mp4", fps=30)
-    time.sleep(10)
-    # print("pausing")
-    # rec.pause_recording()
-    # time.sleep(2)
-    # print("resuming")
-    # rec.resume_recording()
-    # time.sleep(5)
+    time.sleep(5)
+
+    print("pausing")
+    rec.pause_recording()
+    time.sleep(2)
+
+    print("resuming")
+    rec.resume_recording()
+    time.sleep(5)
+
     print("recording ended")
     rec.stop_recording()
