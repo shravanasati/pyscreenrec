@@ -5,6 +5,7 @@ from warnings import warn
 
 import cv2
 import mss
+from mss.models import Monitor
 from mss.screenshot import ScreenShot
 import numpy as np
 
@@ -25,9 +26,6 @@ class NoScreenRecordingInProgress(Warning):
     """
 
     pass
-
-
-# todo region of the screen
 
 
 class ScreenRecorder:
@@ -56,8 +54,6 @@ class ScreenRecorder:
         # ! with using instances from main thread in sub-threads
         # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
         with mss.mss() as sct:
-            mon = sct.monitors[0]
-
             # checking if screen is already being recorded
             if self.__running.value != 0:
                 warn("Screen recording is already running.", ScreenRecordingInProgress)
@@ -74,11 +70,19 @@ class ScreenRecorder:
                     # thus, if more than required time has been spent just on
                     # screenshotting, don't sleep at all
                     st_start = time.perf_counter()
-                    self.queue.put(sct.grab(mon))
+                    self.queue.put(sct.grab(self.mon))
                     st_total = time.perf_counter() - st_start
                     time.sleep(max(0, 1 / self.fps - st_total))
 
-    def start_recording(self, video_name: str, fps: int) -> None:
+    @staticmethod
+    def _get_monitor(mon: Monitor | None):
+        if mon is None:
+            with mss.mss() as sct:
+                return sct.monitors[0]
+
+        return mon
+
+    def start_recording(self, video_name: str, fps: int, monitor: Monitor | None = None) -> None:
         """
         Starts screen recording. It is a non-blocking call.
         The `stop_recording` method must be called after this
@@ -92,9 +96,23 @@ class ScreenRecorder:
         video_name (str) --> The name of the output screen recording. Must end with `.mp4`.
 
         fps (int) --> The Frames Per Second for the screen recording. Implies how much screenshots will be taken in a second.
+
+        monitor (Monitor, optional) -> The monitor that needs to be captured, here you can specify the region of the screen you want to record. It must be dictionary with these fields:
+
+        {
+            "mon": 1,
+            "left": 100,
+            "top": 100,
+            "width": 1000,
+            "height": 1000
+        }
+
+        If this parameter is not provided, pyscreenrec captures the entire screen.
         """
         self.fps = fps
         self.video_name = video_name
+
+        self.mon = self._get_monitor(monitor)
 
         # checking for video extension
         if not self.video_name.endswith(".mp4"):
@@ -113,9 +131,8 @@ class ScreenRecorder:
         need to written to the video, and also releases the video when `stop_recording`
         is called.
         """
-        with mss.mss() as sct:
-            mon = sct.monitors[0]
-            width, height = mon["width"], mon["height"]
+        width, height = self.mon["width"], self.mon["height"]
+
         video = cv2.VideoWriter(
             self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
         )
@@ -188,7 +205,13 @@ if __name__ == "__main__":
     rec = ScreenRecorder()
 
     print("recording started")
-    rec.start_recording("Recording.mp4", fps=30)
+    rec.start_recording("Recording.mp4", fps=30, monitor={
+        "mon": 1,
+        "left": 100,
+        "top": 100,
+        "width": 1000,
+        "height": 1000
+    })
     time.sleep(5)
 
     print("pausing")
