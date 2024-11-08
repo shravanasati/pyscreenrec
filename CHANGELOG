@@ -28,3 +28,14 @@ Change Log
 - Temporary screenshots are now stored in `~/.pyscreenrec_data` folder.
 - Internal refactors.
 --------------
+
+
+0.6 (09/11/24)
+--------------
+- Write screenshots directly to the video stream instead of the disk.
+- Delegate image writing to a separate thread.
+- Use mss library instead of pyscreeze for capturing screenshots.
+- Capture a part of the screen.
+- Performance improvements.
+- Internal refactors.
+--------------

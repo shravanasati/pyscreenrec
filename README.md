@@ -17,14 +17,26 @@ Install on Linux/macOS:
 <br>
 
 ## Example usage
+
+
 ``` python
 >>> import pyscreenrec
 >>> recorder = pyscreenrec.ScreenRecorder()
 
 >>> # to start recording
->>> recorder.start_recording("recording.mp4", 10) 
+>>> recorder.start_recording("recording.mp4", 30, {
+	"mon": 1,
+	"left": 100,
+	"top": 100,
+	"width": 1000,
+	"height": 1000
+}) 
 >>> # 'recording.mp4' is the name of the output video file, may also contain full path like 'C:/Users/<user>/Videos/video.mp4'
->>> # the second parameter(10) is the FPS. You can specify the FPS for the screen recording using the second parameter.
+>>> # the second parameter is the FPS for the recording
+>>> # the third parameter (optional) is the monitor and the dimensions that needs to be recorded,
+# here we're capturing the first monitor, 100px from left, 100px from right, and then 1000px each in resp. axes
+# refer https://python-mss.readthedocs.io/examples.html#part-of-the-screen-of-the-2nd-monitor for more information
+
 
 >>> # to pause recording
 >>> recorder.pause_recording()
@@ -36,6 +48,8 @@ Install on Linux/macOS:
 >>> recorder.stop_recording()
 ```
 
+> Take a look at the GUI screen recorder [here](examples/gui_recorder.py) for more information.
+
 Keep in mind that the `start_recording` method is non-blocking, it will start a thread in the background to capture the screenshots.
 
 The `stop_recording` saves the video and deletes all screenshots used in the session. 
@@ -45,22 +59,27 @@ If a screen recording session is already running, calling the `start_recording` 
 
 Similarly, if a screen recording session is not running, calling the `stop_recording` and `pause_recording` methods raises a `NoScreenRecodingInProgress` warning.
 
+
 <br>
 
 ## Known limitations
+
 *pyscreenrec* is not able to:
 - capture the system sound during screen recording
-- capture only a certain part of the screen
 
 <br>
 
 ## Change Log
-Changes made in the latest version (*v0.5*) are:
-- Remove the `HighFPSWarning` and `InvalidFPS` exception classes.
-- Raise frame count by almost 2 times.
-- Calling start and resume recording methods on an already running recorder instance raises a warning instead of printing, and vice versa.
-- Temporary screenshots are now stored in `~/.pyscreenrec_data` folder.
+
+Changes made in the latest version (*v0.6*) are:
+
+- Write screenshots directly to the video stream instead of the disk.
+- Delegate image writing to a separate thread.
+- Use mss library instead of pyscreeze for capturing screenshots.
+- Capture a part of the screen.
+- Performance improvements.
 - Internal refactors.
+
 
 
 View [CHANGELOG](https://github.com/shravanasati/pyscreenrec/blob/master/CHANGELOG) for more details.
@@ -68,6 +87,7 @@ View [CHANGELOG](https://github.com/shravanasati/pyscreenrec/blob/master/CHANGEL
 <br>
 
 ## Contribution
+
 Pull requests are welcome. If you want to make a major change, open an issue first to discuss about the change.
 
 For further details, view [CONTRIBUTING.md](https://github.com/shravanasati/pyscreenrec/blob/master/CONTRIBUTING.md).

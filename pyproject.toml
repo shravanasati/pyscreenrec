@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "pyscreenrec"
+version = "0.6"
+description = "A small and cross-platform python library for recording screen."
+authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["python", "screen recording", "screen", "recording", "screenshots"]
+classifiers = [
+	"Development Status :: 3 - Alpha",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: MIT License",
+	"Programming Language :: Python :: 3.6",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Operating System :: Unix",
+	"Operating System :: MacOS :: MacOS X",
+	"Operating System :: Microsoft :: Windows",
+	"Topic :: Software Development :: Libraries",
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.26.4"
+opencv-python = "^4.9"
+mss = "^9.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
