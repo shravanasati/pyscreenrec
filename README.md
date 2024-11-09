@@ -48,12 +48,14 @@ Install on Linux/macOS:
 >>> recorder.stop_recording()
 ```
 
-> Take a look at the GUI screen recorder [here](examples/gui_recorder.py) for more information.
+> Take a look at the example GUI screen recorder [here](examples/gui_recorder.py) for more information.
 
 Keep in mind that the `start_recording` method is non-blocking, it will start a thread in the background to capture the screenshots.
 
-The `stop_recording` saves the video and deletes all screenshots used in the session. 
-So calling the `stop_recording` method is necessary when `start_recording` is called.
+
+The `stop_recording` saves the video. So calling the `stop_recording` method is necessary when `start_recording` is called.
+
+You'd ideally need some sort of a timeout or a callback to call the `stop_recording` function after `start_recording`, to give the program some time to capture the screen.
 
 If a screen recording session is already running, calling the `start_recording` and `resume_recording` methods raises a `ScreenRecodingInProgress` warning.
 

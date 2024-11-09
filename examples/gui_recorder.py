@@ -2,20 +2,26 @@ import tkinter as tk
 from tkinter import messagebox
 from warnings import filterwarnings
 
-from pyscreenrec import ScreenRecorder, ScreenRecordingInProgress, NoScreenRecordingInProgress
+from pyscreenrec import (
+    ScreenRecorder,
+    ScreenRecordingInProgress,
+    NoScreenRecordingInProgress,
+)
 
+# to catch the warnings as error
 filterwarnings("error")
 
 COORDINATES = None
+
 
 class RegionSelector(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Select Recording Region")
         self.geometry("800x600")
-        self.attributes('-alpha', 0.3)
-        self.attributes('-fullscreen', True)
-        self.configure(background='grey')
+        self.attributes("-alpha", 0.3)
+        self.attributes("-fullscreen", True)
+        self.configure(background="grey")
 
         self.start_x = None
         self.start_y = None
@@ -23,11 +29,11 @@ class RegionSelector(tk.Toplevel):
         self.end_y = None
 
         self.canvas = tk.Canvas(self, highlightthickness=0)
-        self.canvas.pack(fill='both', expand=True)
+        self.canvas.pack(fill="both", expand=True)
 
-        self.canvas.bind('<Button-1>', self.start_selection)
-        self.canvas.bind('<B1-Motion>', self.update_selection)
-        self.canvas.bind('<ButtonRelease-1>', self.end_selection)
+        self.canvas.bind("<Button-1>", self.start_selection)
+        self.canvas.bind("<B1-Motion>", self.update_selection)
+        self.canvas.bind("<ButtonRelease-1>", self.end_selection)
 
         self.selection_rect = None
 
@@ -41,7 +47,7 @@ class RegionSelector(tk.Toplevel):
         if self.selection_rect:
             self.canvas.delete(self.selection_rect)
         self.selection_rect = self.canvas.create_rectangle(
-            self.start_x, self.start_y, event.x, event.y, outline='red'
+            self.start_x, self.start_y, event.x, event.y, outline="red"
         )
 
     def end_selection(self, event):
@@ -75,19 +81,29 @@ class GUIScreenRecorder(tk.Tk):
 
         self.recorder = ScreenRecorder()
 
-        self.start_button = tk.Button(self, text="Start Recording", command=self.start_recording)
+        self.start_button = tk.Button(
+            self, text="Start Recording", command=self.start_recording
+        )
         self.start_button.pack(pady=10)
 
-        self.select_region_button = tk.Button(self, text="Select Region", command=self.select_recording_region)
+        self.select_region_button = tk.Button(
+            self, text="Select Region", command=self.select_recording_region
+        )
         self.select_region_button.pack(pady=10)
 
-        self.pause_button = tk.Button(self, text="Pause Recording", command=self.pause_recording)
+        self.pause_button = tk.Button(
+            self, text="Pause Recording", command=self.pause_recording
+        )
         self.pause_button.pack(pady=10)
 
-        self.resume_button = tk.Button(self, text="Resume Recording", command=self.resume_recording)
+        self.resume_button = tk.Button(
+            self, text="Resume Recording", command=self.resume_recording
+        )
         self.resume_button.pack(pady=10)
 
-        self.stop_button = tk.Button(self, text="Stop Recording", command=self.stop_recording)
+        self.stop_button = tk.Button(
+            self, text="Stop Recording", command=self.stop_recording
+        )
         self.stop_button.pack(pady=10)
 
         self.filename_entry = tk.Entry(self, width=40)
@@ -109,9 +125,13 @@ class GUIScreenRecorder(tk.Tk):
             self.recorder.start_recording(filename, fps, COORDINATES)
             messagebox.showinfo("Recording Started", "Screen recording has started.")
         except (ValueError, SyntaxError):
-            messagebox.showerror("Invalid Input", "Please enter valid values for the filename and FPS.")
+            messagebox.showerror(
+                "Invalid Input", "Please enter valid values for the filename and FPS."
+            )
         except ScreenRecordingInProgress:
-            messagebox.showerror("Recording in Progress", "Screen recording is already in progress.")
+            messagebox.showerror(
+                "Recording in Progress", "Screen recording is already in progress."
+            )
 
     def pause_recording(self):
         try:
@@ -123,9 +143,13 @@ class GUIScreenRecorder(tk.Tk):
     def resume_recording(self):
         try:
             self.recorder.resume_recording()
-            messagebox.showinfo("Recording Resumed", "Screen recording has been resumed.")
+            messagebox.showinfo(
+                "Recording Resumed", "Screen recording has been resumed."
+            )
         except ScreenRecordingInProgress:
-            messagebox.showerror("Recording in Progress", "Screen recording is already in progress.")
+            messagebox.showerror(
+                "Recording in Progress", "Screen recording is already in progress."
+            )
 
     def stop_recording(self):
         try:
