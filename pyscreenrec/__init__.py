@@ -131,6 +131,7 @@ class ScreenRecorder:
         need to written to the video, and also releases the video when `stop_recording`
         is called.
         """
+        video = None
         try:
             img = self.queue.get()
             if img is None:
@@ -155,9 +156,12 @@ class ScreenRecorder:
                 video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
 
         except Exception as e:
-            logger.error(f"Error in video writing: {e}")
+            print(f"Unexpected error in video writing: {e}")
+            raise
+
         finally:
-            video.release()
+            if video is not None:
+                video.release()
 
     def stop_recording(self) -> None:
         """
