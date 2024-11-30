@@ -131,19 +131,37 @@ class ScreenRecorder:
         need to written to the video, and also releases the video when `stop_recording`
         is called.
         """
-        width, height = self.mon["width"], self.mon["height"]
-
-        video = cv2.VideoWriter(
-            self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
-        )
-
-        while True:
+        video = None
+        try:
             img = self.queue.get()
             if img is None:
-                break
-            video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
+                return
 
-        video.release()
+            frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
+            height, width = frame.shape[:2]
+
+            if width <= 0 or height <= 0:
+                raise ValueError("Invalid width or height.")
+
+            video = cv2.VideoWriter(
+                self.video_name, cv2.VideoWriter_fourcc(*"mp4v"), self.fps, (width, height)
+            )
+
+            video.write(frame)
+
+            while True:
+                img = self.queue.get()
+                if img is None:
+                    break
+                video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
+
+        except Exception as e:
+            print(f"Unexpected error in video writing: {e}")
+            raise
+
+        finally:
+            if video is not None:
+                video.release()
 
     def stop_recording(self) -> None:
         """
