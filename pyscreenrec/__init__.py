@@ -28,6 +28,31 @@ class NoScreenRecordingInProgress(Warning):
     pass
 
 
+class _BufferedQueueWriter:
+    def __init__(self, queue: Queue, buffer_size: int):
+        self.__queue = queue
+        self.buffer_size = buffer_size
+        self.__buffer = [None for _ in range(self.buffer_size)]
+        self.__buffer.clear()
+
+    def put(self, item):
+        """
+        Adds an item to the internal buffer. Flushes the buffer if full.
+        """
+        self.__buffer.append(item)
+        if len(self.__buffer) >= self.buffer_size:
+            self._flush()
+
+    def _flush(self):
+        """
+        Clears the internal buffer after moving all items to the queue.
+        """
+        # self.__queue.put(self.__buffer.copy())
+        for item in self.__buffer:
+            self.__queue.put(item)
+        self.__buffer.clear()
+
+
 class ScreenRecorder:
     """
     Base class for screen recording.
@@ -50,6 +75,9 @@ class ScreenRecorder:
         to the saver thread, which is responsible for writing these
         images to the video stream.
         """
+        # fps would be set at this point
+        self.frame_buffer = _BufferedQueueWriter(self.queue, self.fps * 2)
+
         # ! not instantiating this in the constructor because mss has issues
         # ! with using instances from main thread in sub-threads
         # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
@@ -61,6 +89,7 @@ class ScreenRecorder:
             else:
                 self.__running.value = 1
 
+                times = []
                 while self.__running.value != 0:
                     # not sleeping for exactly 1/self.fps seconds because
                     # otherwise time is lost in sleeping which could be used in
@@ -70,9 +99,13 @@ class ScreenRecorder:
                     # thus, if more than required time has been spent just on
                     # screenshotting, don't sleep at all
                     st_start = time.perf_counter()
-                    self.queue.put(sct.grab(self.mon))
+                    self.frame_buffer.put(sct.grab(self.mon))
+                    # self.queue.put(sct.grab(self.mon))
                     st_total = time.perf_counter() - st_start
+                    times.append(st_total)
                     time.sleep(max(0, 1 / self.fps - st_total))
+
+                print(sum(times) / len(times))
 
     @staticmethod
     def _get_monitor(mon: Monitor | None):
@@ -132,8 +165,10 @@ class ScreenRecorder:
         is called.
         """
         video = None
+        frame_count = 0
         try:
             img = self.queue.get()
+            frame_count += 1
             if img is None:
                 return
 
@@ -153,6 +188,7 @@ class ScreenRecorder:
                 img = self.queue.get()
                 if img is None:
                     break
+                frame_count += 1
                 video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
 
         except Exception as e:
@@ -160,6 +196,7 @@ class ScreenRecorder:
             raise
 
         finally:
+            print(f"{frame_count=}")
             if video is not None:
                 video.release()
 
@@ -232,12 +269,12 @@ if __name__ == "__main__":
     })
     time.sleep(5)
 
-    print("pausing")
-    rec.pause_recording()
-    time.sleep(2)
+    # print("pausing")
+    # rec.pause_recording()
+    # time.sleep(2)
 
-    print("resuming")
-    rec.resume_recording()
+    # print("resuming")
+    # rec.resume_recording()
     time.sleep(5)
 
     print("recording ended")
