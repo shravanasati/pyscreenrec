@@ -68,6 +68,7 @@ Similarly, if a screen recording session is not running, calling the `stop_recor
 
 *pyscreenrec* is not able to:
 - capture the system sound during screen recording
+- recording screen beyond 30fps yields in frame drop
 
 <br>
 
