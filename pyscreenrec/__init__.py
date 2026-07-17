@@ -1,5 +1,5 @@
-from multiprocessing import Queue, Value
-from threading import Thread
+from queue import Queue
+from threading import Thread, Event
 import time
 from warnings import warn
 
@@ -37,8 +37,7 @@ class ScreenRecorder:
         """
         Constructor.
         """
-        # 0 -> False, 1 -> True
-        self.__running = Value("i", 0)
+        self.__running = Event()
         self.queue: Queue[ScreenShot | None] = Queue()
 
     def _start_recording(self) -> None:
@@ -55,13 +54,13 @@ class ScreenRecorder:
         # ! AttributeError: '_thread._local' object has no attribute 'srcdc'
         with mss.mss() as sct:
             # checking if screen is already being recorded
-            if self.__running.value != 0:
+            if self.__running.is_set():
                 warn("Screen recording is already running.", ScreenRecordingInProgress)
 
             else:
-                self.__running.value = 1
+                self.__running.set()
 
-                while self.__running.value != 0:
+                while self.__running.is_set():
                     # not sleeping for exactly 1/self.fps seconds because
                     # otherwise time is lost in sleeping which could be used in
                     # capturing frames
@@ -81,6 +80,11 @@ class ScreenRecorder:
                 return sct.monitors[0]
 
         return mon
+
+    @staticmethod
+    def _to_bgr(img: ScreenShot) -> np.ndarray:
+        bgra = np.frombuffer(img.raw, dtype=np.uint8).reshape(img.height, img.width, 4)
+        return cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
 
     def start_recording(self, video_name: str, fps: int, monitor: Monitor | None = None) -> None:
         """
@@ -137,7 +141,7 @@ class ScreenRecorder:
             if img is None:
                 return
 
-            frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR)
+            frame = self._to_bgr(img)
             height, width = frame.shape[:2]
 
             if width <= 0 or height <= 0:
@@ -153,7 +157,7 @@ class ScreenRecorder:
                 img = self.queue.get()
                 if img is None:
                     break
-                video.write(cv2.cvtColor(np.array(img), cv2.COLOR_BGRA2BGR))
+                video.write(self._to_bgr(img))
 
         except Exception as e:
             print(f"Unexpected error in video writing: {e}")
@@ -170,14 +174,14 @@ class ScreenRecorder:
         Raises a warning `NoScreenRecordingInProgress` if this method is called while
         no screen recording is already running.
         """
-        if self.__running.value == 0:
+        if not self.__running.is_set():
             warn(
                 "No screen recording session is going on.", NoScreenRecordingInProgress
             )
             return
 
         # stop both the processes
-        self.__running.value = 0
+        self.__running.clear()
         self.recorder_thread.join()
 
         # signal _save_image process to quit
@@ -191,13 +195,13 @@ class ScreenRecorder:
         Raises a warning `NoScreenRecordingInProgress` if this method is called while
         no screen recording is already running.
         """
-        if self.__running.value == 0:
+        if not self.__running.is_set():
             warn(
                 "No screen recording session is going on.", NoScreenRecordingInProgress
             )
             return
 
-        self.__running.value = 0
+        self.__running.clear()
 
     def resume_recording(self) -> None:
         """
@@ -206,7 +210,7 @@ class ScreenRecorder:
         Raises a warning `ScreenRecordingInProgress` if this method is called while
         the screen recording is already running.
         """
-        if self.__running.value != 0:
+        if self.__running.is_set():
             warn("Screen recording is already running.", ScreenRecordingInProgress)
             return
 
@@ -216,13 +220,16 @@ class ScreenRecorder:
         self.recorder_thread.start()
 
     def __repr__(self) -> str:
-        return f"ScreenRecorder <running = {bool(self.__running.value)}>"
+        return f"ScreenRecorder <running = {self.__running.is_set()}>"
 
 
 if __name__ == "__main__":
+    import cProfile, pstats, io
     rec = ScreenRecorder()
 
     print("recording started")
+    profiler = cProfile.Profile()
+    profiler.enable()
     rec.start_recording("Recording.mp4", fps=30, monitor={
         "mon": 1,
         "left": 100,
@@ -232,13 +239,18 @@ if __name__ == "__main__":
     })
     time.sleep(5)
 
-    print("pausing")
-    rec.pause_recording()
-    time.sleep(2)
+    # print("pausing")
+    # rec.pause_recording()
+    # time.sleep(2)
 
-    print("resuming")
-    rec.resume_recording()
-    time.sleep(5)
+    # print("resuming")
+    # rec.resume_recording()
+    # time.sleep(5)
 
     print("recording ended")
     rec.stop_recording()
+    profiler.disable()
+    s = io.StringIO()
+    ps = pstats.Stats(profiler, stream=s).sort_stats("tottime")
+    ps.print_stats()
+    print(s.getvalue())
